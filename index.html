@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#FEFCF7" />
+  <title>Nuptia — Your Complete Wedding Planner</title>
+  <meta name="description" content="A beautiful, universal wedding planning dashboard. Manage budget, guests, itinerary, vendors, and countdown — all in one elegant place." />
+  <meta property="og:title" content="Nuptia — Your Complete Wedding Planner" />
+  <meta property="og:description" content="Plan your perfect wedding with our all-in-one planner." />
+  <meta property="og:type" content="website" />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Inter:wght@300;400;500;600&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
+
+  <!-- Firebase SDK (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ═══ LOADING SCREEN ═══ -->
+  <div id="loadingScreen" class="loading-screen">
+    <div class="loading-content">
+      <div class="loading-ring"></div>
+      <p>Loading your planner…</p>
+    </div>
+  </div>
+
+  <!-- ═══ TOP NAV ═══ -->
+  <nav class="top-nav" id="topNav">
+    <a class="nav-logo" href="#home">
+      <span class="logo-icon">💍</span>
+      <span class="logo-text">Nuptia</span>
+    </a>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#budget">Budget</a></li>
+      <li><a href="#guests">Guests</a></li>
+      <li><a href="#itinerary">Itinerary</a></li>
+      <li><a href="#vendors">Vendors</a></li>
+      <li><a href="#delegation">Team</a></li>
+      <li><a href="#countdown">Countdown</a></li>
+    </ul>
+    <div class="nav-right">
+      <div class="cloud-status" id="cloudStatus" title="Cloud sync status">
+        <span class="cloud-dot" id="cloudDot"></span>
+        <span class="cloud-label" id="cloudLabel">Connecting…</span>
+      </div>
+      <button class="hamburger" id="hamburger" aria-label="Menu" onclick="toggleMenu()">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ═══ MOBILE DRAWER ═══ -->
+  <div class="drawer-backdrop" id="drawerBackdrop" onclick="closeMenu()"></div>
+  <div class="nav-drawer" id="navDrawer">
+    <div class="drawer-header">
+      <span class="logo-text">💍 Nuptia</span>
+      <button onclick="closeMenu()" class="drawer-close">✕</button>
+    </div>
+    <nav class="drawer-links">
+      <a href="#budget"    onclick="closeMenu()">💰 Budget</a>
+      <a href="#guests"    onclick="closeMenu()">👥 Guest List</a>
+      <a href="#itinerary" onclick="closeMenu()">📅 Itinerary</a>
+      <a href="#vendors"   onclick="closeMenu()">📋 Vendors</a>
+      <a href="#delegation"onclick="closeMenu()">🤝 Team</a>
+      <a href="#countdown" onclick="closeMenu()">⏳ Countdown</a>
+    </nav>
+    <div class="drawer-cloud-status">
+      <span class="cloud-dot" id="drawerCloudDot"></span>
+      <span id="drawerCloudLabel">Connecting…</span>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ HERO ═══════════════════ -->
+  <section class="hero" id="home">
+    <div class="hero-img-wrap">
+      <img src="hero_bg.png" alt="Elegant wedding setting" class="hero-img" />
+      <div class="hero-overlay"></div>
+    </div>
+    <div class="hero-content">
+      <p class="hero-eyebrow">✨ Your All-in-One Wedding Companion</p>
+      <h1 class="hero-title">Plan Your<br /><em>Perfect Day</em></h1>
+      <p class="hero-subtitle editable-text" data-key="heroSubtitle" contenteditable="true">
+        A beautiful, stress-free wedding — organised from this moment to your first dance.
+      </p>
+      <div class="wedding-meta-row">
+        <div class="meta-chip">
+          <span>🗓️</span>
+          <input type="date" id="weddingDate" class="date-input" value="2026-12-15" onchange="onDateChange()" />
+        </div>
+        <div class="meta-chip editable-text" data-key="coupleNames" contenteditable="true" style="min-width:120px">
+          Bride & Groom
+        </div>
+        <div class="meta-chip editable-text" data-key="venue" contenteditable="true" style="min-width:100px">
+          📍 Venue TBD
+        </div>
+      </div>
+      <div class="hero-actions">
+        <a href="#budget" class="btn-hero-primary">Start Planning →</a>
+        <a href="#guests" class="btn-hero-secondary">Manage Guests</a>
+      </div>
+    </div>
+    <!-- Countdown chips on hero -->
+    <div class="hero-countdown-strip" id="heroCountdownStrip">
+      <div class="hcs-block"><span class="hcs-num" id="hcsDays">—</span><span class="hcs-label">Days</span></div>
+      <div class="hcs-sep"></div>
+      <div class="hcs-block"><span class="hcs-num" id="hcsHours">—</span><span class="hcs-label">Hours</span></div>
+      <div class="hcs-sep"></div>
+      <div class="hcs-block"><span class="hcs-num" id="hcsMins">—</span><span class="hcs-label">Minutes</span></div>
+      <div class="hcs-sep"></div>
+      <div class="hcs-block"><span class="hcs-num" id="hcsSecs">—</span><span class="hcs-label">Seconds</span></div>
+    </div>
+  </section>
+
+  <!-- ═══ ALERT RIBBON ═══ -->
+  <div class="alert-ribbon" id="alertRibbon">
+    <div class="ribbon-scroll">
+      <span class="ribbon-chip urgent">🏛️ Lock Venue — Top Priority</span>
+      <span class="ribbon-chip urgent">📸 Book Photographer Now</span>
+      <span class="ribbon-chip">💄 Book MUA by July</span>
+      <span class="ribbon-chip">🍽️ Caterer Shortlist Next</span>
+      <span class="ribbon-chip">🌸 Decorator Mood Board</span>
+      <span class="ribbon-chip">🚗 Block Transport Early</span>
+      <!-- Duplicate for seamless loop -->
+      <span class="ribbon-chip urgent">🏛️ Lock Venue — Top Priority</span>
+      <span class="ribbon-chip urgent">📸 Book Photographer Now</span>
+      <span class="ribbon-chip">💄 Book MUA by July</span>
+      <span class="ribbon-chip">🍽️ Caterer Shortlist Next</span>
+      <span class="ribbon-chip">🌸 Decorator Mood Board</span>
+      <span class="ribbon-chip">🚗 Block Transport Early</span>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ MAIN ═══════════════════ -->
+  <main>
+
+    <!-- ════════════════════════════════
+         SECTION 1 — BUDGET
+    ════════════════════════════════ -->
+    <section class="section" id="budget">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-eyebrow">Section 01</div>
+          <h2 class="section-title">Financial Architecture</h2>
+          <p class="section-desc">Set your budget and slide each category. Everything recalculates instantly and saves to the cloud.</p>
+        </div>
+
+        <!-- Budget Control Bar -->
+        <div class="budget-control card">
+          <div class="bc-left">
+            <label class="field-label">Total Budget</label>
+            <div class="budget-input-wrap">
+              <span class="bi-prefix">₹</span>
+              <input type="number" id="totalBudget" class="budget-num-input" value="40" min="1" max="9999" oninput="onBudgetInput()" />
+              <span class="bi-suffix">Lakhs</span>
+            </div>
+          </div>
+          <div class="bc-stats" id="bcStats">
+            <div class="bc-stat">
+              <span class="bc-val" id="bcTotal">₹40L</span>
+              <span class="bc-key">Total</span>
+            </div>
+            <div class="bc-divider"></div>
+            <div class="bc-stat">
+              <span class="bc-val" id="bcAllocated">—</span>
+              <span class="bc-key">Allocated</span>
+            </div>
+            <div class="bc-divider"></div>
+            <div class="bc-stat highlight">
+              <span class="bc-val" id="bcBuffer">—</span>
+              <span class="bc-key">Buffer</span>
+            </div>
+          </div>
+          <button class="btn-outline-sm" onclick="resetBudget()">↺ Reset Defaults</button>
+        </div>
+
+        <!-- Budget Category Cards -->
+        <div class="budget-cards" id="budgetCards"></div>
+
+        <!-- Donut Chart placeholder + legend -->
+        <div class="budget-visual card">
+          <div class="bv-chart-wrap">
+            <canvas id="budgetChart" width="220" height="220"></canvas>
+            <div class="bv-chart-centre">
+              <span id="bvCentreAmt">₹—</span>
+              <span>Total</span>
+            </div>
+          </div>
+          <div class="bv-legend" id="bvLegend"></div>
+        </div>
+
+        <!-- Cut / No-cut -->
+        <div class="two-col">
+          <div class="card cut-card">
+            <h3 class="card-heading"><span>✂️</span> 3 Areas to Negotiate</h3>
+            <div class="cut-list" id="cutList">
+              <div class="cut-row">
+                <span class="cut-num">01</span>
+                <div>
+                  <strong class="editable-text" data-key="cut1t" contenteditable="true">Return Gifts &amp; Favours</strong>
+                  <p class="editable-text" data-key="cut1b" contenteditable="true">Elegant boxes of sweets or dried fruit over personalised branded gifts. Guests remember the food, not the favour.</p>
+                  <span class="tag-green">Save 30–50%</span>
+                </div>
+              </div>
+              <div class="cut-row">
+                <span class="cut-num">02</span>
+                <div>
+                  <strong class="editable-text" data-key="cut2t" contenteditable="true">Printed Invitations</strong>
+                  <p class="editable-text" data-key="cut2b" contenteditable="true">Send 70% of invites digitally. Reserve premium printed cards for family elders and VIP guests only.</p>
+                  <span class="tag-green">Save ₹50K–₹1.5L</span>
+                </div>
+              </div>
+              <div class="cut-row">
+                <span class="cut-num">03</span>
+                <div>
+                  <strong class="editable-text" data-key="cut3t" contenteditable="true">Beverage / Bar Setup</strong>
+                  <p class="editable-text" data-key="cut3b" contenteditable="true">Curate 2–3 premium options with a 3-hour cap. Quality always beats open quantity.</p>
+                  <span class="tag-green">Save 20–35%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card nocut-card">
+            <h3 class="card-heading"><span>💎</span> 2 Areas — Never Cut</h3>
+            <div class="nocut-row">
+              <div class="nocut-icon-wrap">🍽️</div>
+              <div>
+                <strong class="editable-text" data-key="nocut1t" contenteditable="true">Catering Quality</strong>
+                <p class="editable-text" data-key="nocut1b" contenteditable="true">Every guest will remember and talk about the food for years. Negotiate quantity, never quality.</p>
+              </div>
+            </div>
+            <div class="nocut-row">
+              <div class="nocut-icon-wrap">📸</div>
+              <div>
+                <strong class="editable-text" data-key="nocut2t" contenteditable="true">Photography &amp; Videography</strong>
+                <p class="editable-text" data-key="nocut2b" contenteditable="true">The only permanent artefacts of your day. A bad photographer cannot be undone — invest here without guilt.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════
+         SECTION 2 — GUEST LIST
+    ════════════════════════════════ -->
+    <section class="section section-alt" id="guests">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-eyebrow">Section 02</div>
+          <h2 class="section-title">Guest List Manager</h2>
+          <p class="section-desc">Add every guest manually. Track RSVP, event attendance, and dietary needs. All data syncs to the cloud.</p>
+        </div>
+
+        <!-- Stats Bar -->
+        <div class="stats-grid" id="guestStatsGrid">
+          <div class="stat-card"><span class="stat-num" id="stTotal">0</span><span class="stat-label">Total Invited</span></div>
+          <div class="stat-card green"><span class="stat-num" id="stConfirmed">0</span><span class="stat-label">✅ Confirmed</span></div>
+          <div class="stat-card amber"><span class="stat-num" id="stPending">0</span><span class="stat-label">🕐 Pending</span></div>
+          <div class="stat-card rose"><span class="stat-num" id="stDeclined">0</span><span class="stat-label">❌ Declined</span></div>
+          <div class="stat-card gold"><span class="stat-num" id="stCatering">0</span><span class="stat-label">🍽️ Catering Est.</span></div>
+        </div>
+
+        <!-- Add Guest Form -->
+        <div class="card add-form-card" id="addFormCard">
+          <div class="form-card-header">
+            <h3 class="card-heading-sm">➕ Add New Guest</h3>
+            <button class="btn-toggle" id="formToggleBtn" onclick="toggleAddForm()">▲ Hide</button>
+          </div>
+          <div id="addFormBody">
+            <div class="form-grid-6">
+              <div class="fg">
+                <label>Full Name *</label>
+                <input type="text" id="gName" placeholder="e.g. Fatima Ahmed" />
+              </div>
+              <div class="fg">
+                <label>Phone Number</label>
+                <input type="tel" id="gPhone" placeholder="e.g. 98765 43210" />
+              </div>
+              <div class="fg">
+                <label>Category</label>
+                <select id="gCategory">
+                  <option value="immediate">Immediate Family</option>
+                  <option value="close" selected>Close Friends &amp; Cousins</option>
+                  <option value="extended">Extended Family</option>
+                  <option value="colleagues">Colleagues</option>
+                  <option value="courtesy">Courtesy Invite</option>
+                </select>
+              </div>
+              <div class="fg">
+                <label>Side</label>
+                <select id="gSide">
+                  <option value="bride">Bride's Side</option>
+                  <option value="groom">Groom's Side</option>
+                  <option value="both">Both Sides</option>
+                </select>
+              </div>
+              <div class="fg">
+                <label>RSVP</label>
+                <select id="gRsvp">
+                  <option value="pending" selected>Pending 🕐</option>
+                  <option value="confirmed">Confirmed ✅</option>
+                  <option value="declined">Declined ❌</option>
+                </select>
+              </div>
+              <div class="fg">
+                <label>Dietary / Notes</label>
+                <input type="text" id="gNote" placeholder="Vegetarian, nut allergy…" />
+              </div>
+            </div>
+            <div class="fg fg-full" style="margin-bottom:16px">
+              <label>Attending Events</label>
+              <div class="event-checkboxes" id="gEvents">
+                <label class="evt-check"><input type="checkbox" value="day1" checked /><span>Day 1 — Pre-Wedding</span></label>
+                <label class="evt-check"><input type="checkbox" value="day2" checked /><span>Day 2 — Celebration</span></label>
+                <label class="evt-check"><input type="checkbox" value="day3" checked /><span>Day 3 — Wedding</span></label>
+              </div>
+            </div>
+            <div class="form-actions">
+              <button class="btn-primary" id="addGuestBtn" onclick="submitGuest()">➕ Add Guest</button>
+              <button class="btn-outline" id="cancelEditBtn" onclick="cancelGuestEdit()" style="display:none">✕ Cancel</button>
+              <button class="btn-outline-green" onclick="exportCSV()">📥 Export CSV</button>
+              <button class="btn-outline-rose" onclick="clearAllGuests()">🗑️ Clear All</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Search & Filter -->
+        <div class="search-filter-bar card">
+          <div class="search-wrap">
+            <svg class="search-icon" viewBox="0 0 20 20"><circle cx="8" cy="8" r="5" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M13 13l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            <input type="text" id="gSearch" class="search-input" placeholder="Search by name, phone, or note…" oninput="renderGuests()" />
+          </div>
+          <div class="filter-chips">
+            <select class="filter-sel" id="fCat" onchange="renderGuests()">
+              <option value="">All Categories</option>
+              <option value="immediate">Immediate</option>
+              <option value="close">Close</option>
+              <option value="extended">Extended</option>
+              <option value="colleagues">Colleagues</option>
+              <option value="courtesy">Courtesy</option>
+            </select>
+            <select class="filter-sel" id="fRsvp" onchange="renderGuests()">
+              <option value="">All RSVP</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="pending">Pending</option>
+              <option value="declined">Declined</option>
+            </select>
+            <select class="filter-sel" id="fSide" onchange="renderGuests()">
+              <option value="">All Sides</option>
+              <option value="bride">Bride's</option>
+              <option value="groom">Groom's</option>
+              <option value="both">Both</option>
+            </select>
+            <button class="btn-xs-outline" onclick="clearFilters()">Clear</button>
+          </div>
+        </div>
+
+        <!-- Guest Table -->
+        <div class="table-wrap card">
+          <table class="guest-table" id="guestTable">
+            <thead>
+              <tr>
+                <th onclick="sortBy('name')">Name <span class="sort-arrow">⇅</span></th>
+                <th onclick="sortBy('phone')" class="hide-xs">Phone <span class="sort-arrow">⇅</span></th>
+                <th onclick="sortBy('category')" class="hide-sm">Category <span class="sort-arrow">⇅</span></th>
+                <th onclick="sortBy('side')" class="hide-md">Side <span class="sort-arrow">⇅</span></th>
+                <th onclick="sortBy('rsvp')">RSVP <span class="sort-arrow">⇅</span></th>
+                <th class="hide-sm">Events</th>
+                <th class="hide-md">Notes</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="guestBody"></tbody>
+          </table>
+          <div class="table-empty" id="tableEmpty">
+            <div class="empty-icon">🌸</div>
+            <p>No guests added yet.<br/>Use the form above to start building your guest list.</p>
+          </div>
+        </div>
+
+        <!-- Turnout Estimator -->
+        <div class="card turnout-card">
+          <h3 class="card-heading-sm">📊 Turnout Estimate (Auto-calculated from your list)</h3>
+          <div id="turnoutRows"></div>
+          <div class="turnout-results">
+            <div class="tr-block"><span class="tr-num" id="trTotal">0</span><span class="tr-label">Invited</span></div>
+            <div class="tr-block accent"><span class="tr-num" id="trEst">0</span><span class="tr-label">Estimated Turnout</span></div>
+            <div class="tr-block"><span class="tr-num" id="trCatering">0</span><span class="tr-label">Catering (+15%)</span></div>
+          </div>
+        </div>
+
+        <!-- Venue Checklist -->
+        <div class="card">
+          <h3 class="card-heading-sm">📋 7 Venue Contract Questions (Tick when answered in writing)</h3>
+          <div class="venue-checklist" id="venueChecklist"></div>
+          <div class="checklist-progress-wrap">
+            <div class="cp-track"><div class="cp-fill" id="cpFill" style="width:0%"></div></div>
+            <span class="cp-text" id="cpText">0 / 7 answered</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════
+         SECTION 3 — ITINERARY
+    ════════════════════════════════ -->
+    <section class="section" id="itinerary">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-eyebrow">Section 03</div>
+          <h2 class="section-title">3-Day Itinerary</h2>
+          <p class="section-desc">Click any time, title, or description to edit it. Add your own events or remove ones you don't need.</p>
+        </div>
+        <div class="edit-hint">✏️ All fields are directly editable — click any text to modify</div>
+
+        <div class="day-tabs" id="dayTabs">
+          <button class="day-tab active" onclick="switchDay('day1', this)">Day 1 — Pre-Wedding</button>
+          <button class="day-tab" onclick="switchDay('day2', this)">Day 2 — Celebration</button>
+          <button class="day-tab" onclick="switchDay('day3', this)">Day 3 — Wedding</button>
+        </div>
+
+        <div class="day-panel active" id="panel-day1"><div class="timeline" id="tl-day1"></div><button class="btn-add-event" onclick="addEvent('day1')">+ Add Event</button><div class="essentials-card card" id="ess-day1"></div></div>
+        <div class="day-panel" id="panel-day2"><div class="timeline" id="tl-day2"></div><button class="btn-add-event" onclick="addEvent('day2')">+ Add Event</button><div class="essentials-card card" id="ess-day2"></div></div>
+        <div class="day-panel" id="panel-day3"><div class="timeline" id="tl-day3"></div><button class="btn-add-event" onclick="addEvent('day3')">+ Add Event</button><div class="essentials-card card" id="ess-day3"></div></div>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════
+         SECTION 4 — VENDORS
+    ════════════════════════════════ -->
+    <section class="section section-alt" id="vendors">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-eyebrow">Section 04</div>
+          <h2 class="section-title">Vendor SLA Protocols</h2>
+          <p class="section-desc">Make-or-break contract clauses. Edit any text and add your own vendor contact notes below each card.</p>
+        </div>
+        <div class="edit-hint">✏️ Click any vendor name, clause title, or description to edit</div>
+        <div class="vendor-grid" id="vendorGrid"></div>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════
+         SECTION 5 — DELEGATION
+    ════════════════════════════════ -->
+    <section class="section" id="delegation">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-eyebrow">Section 05</div>
+          <h2 class="section-title">Wedding Day Team</h2>
+          <p class="section-desc">Assign real people to each role. Click to expand and edit any responsibility.</p>
+        </div>
+        <div class="edit-hint">✏️ Assign names, edit role titles and responsibilities</div>
+        <div class="delegation-grid" id="delegationGrid"></div>
+        <div class="tip-banner card">
+          <span>💬</span>
+          <p class="editable-text" data-key="groupTip" contenteditable="true">Create a WhatsApp group with all delegates the day before. Pin the timeline and each person's number. Run a 7:00 AM roll call on wedding morning — no assumptions, only confirmations.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════
+         SECTION 6 — COUNTDOWN
+    ════════════════════════════════ -->
+    <section class="section section-alt" id="countdown">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-eyebrow">Section 06</div>
+          <h2 class="section-title">Milestone Countdown</h2>
+          <p class="section-desc">Your month-by-month action plan. Tick tasks as you complete them and add your own. All progress saves.</p>
+        </div>
+
+        <!-- Big Countdown -->
+        <div class="card countdown-hero">
+          <h3 class="countdown-hero-label">⏳ Time Until Your Wedding Day</h3>
+          <div class="countdown-blocks" id="bigCountdown"></div>
+        </div>
+
+        <!-- Timeline Months -->
+        <div class="month-timeline" id="monthTimeline"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ═══ GUEST EDIT MODAL ═══ -->
+  <div class="modal-backdrop" id="modalBackdrop" onclick="closeModal()"></div>
+  <div class="modal" id="editModal">
+    <div class="modal-hd">
+      <h3>Edit Guest</h3>
+      <button class="modal-x" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-bd">
+      <div class="form-grid-6">
+        <div class="fg"><label>Full Name *</label><input type="text" id="mName" /></div>
+        <div class="fg"><label>Phone</label><input type="tel" id="mPhone" /></div>
+        <div class="fg"><label>Category</label>
+          <select id="mCategory">
+            <option value="immediate">Immediate Family</option>
+            <option value="close">Close Friends &amp; Cousins</option>
+            <option value="extended">Extended Family</option>
+            <option value="colleagues">Colleagues</option>
+            <option value="courtesy">Courtesy</option>
+          </select>
+        </div>
+        <div class="fg"><label>Side</label>
+          <select id="mSide">
+            <option value="bride">Bride's Side</option>
+            <option value="groom">Groom's Side</option>
+            <option value="both">Both</option>
+          </select>
+        </div>
+        <div class="fg"><label>RSVP</label>
+          <select id="mRsvp">
+            <option value="pending">Pending 🕐</option>
+            <option value="confirmed">Confirmed ✅</option>
+            <option value="declined">Declined ❌</option>
+          </select>
+        </div>
+        <div class="fg"><label>Notes</label><input type="text" id="mNote" /></div>
+      </div>
+      <div class="fg fg-full" style="margin-top:8px">
+        <label>Attending Events</label>
+        <div class="event-checkboxes" id="mEvents">
+          <label class="evt-check"><input type="checkbox" value="day1" /><span>Day 1</span></label>
+          <label class="evt-check"><input type="checkbox" value="day2" /><span>Day 2</span></label>
+          <label class="evt-check"><input type="checkbox" value="day3" /><span>Day 3</span></label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn-primary" onclick="saveModalGuest()">💾 Save Changes</button>
+      <button class="btn-outline" onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+
+  <!-- ═══ TOAST ═══ -->
+  <div class="toast" id="toast"></div>
+
+  <!-- ═══ FOOTER ═══ -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <span class="logo-text">💍 Nuptia</span>
+          <p>Your complete wedding planning companion.</p>
+        </div>
+        <div class="footer-links">
+          <a href="#budget">Budget</a>
+          <a href="#guests">Guests</a>
+          <a href="#itinerary">Itinerary</a>
+          <a href="#vendors">Vendors</a>
+          <a href="#delegation">Team</a>
+          <a href="#countdown">Countdown</a>
+        </div>
+        <div class="footer-note">
+          <p>All your data syncs securely to the cloud 🔒</p>
+          <p class="footer-sub">Made with 💛 for every couple, every culture.</p>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Firebase Config — edit firebase-config.js with your credentials -->
+  <script src="firebase-config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+{
+  "name": "nuptia-wedding-planner",
+  "version": "1.0.0",
+  "description": "Universal wedding planning dashboard — budget, guests, itinerary, vendors, countdown.",
+  "main": "index.html",
+  "scripts": {
+    "dev": "npx serve . --listen 3000 --no-clipboard",
+    "build": "echo 'Static site — no build step required'",
+    "deploy": "vercel --prod"
+  },
+  "keywords": ["wedding", "planner", "dashboard"],
+  "license": "MIT"
+}
