@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign In — Nuptia Wedding Planner</title>
+  <meta name="description" content="Sign in to your Nuptia wedding planner account." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="auth.css" />
+</head>
+<body class="auth-body">
+
+  <div class="auth-layout">
+
+    <!-- Left panel — branding -->
+    <div class="auth-left">
+      <div class="auth-left-inner">
+        <a href="index.html" class="auth-logo">
+          <span>💍</span>
+          <span class="auth-logo-text">Nuptia</span>
+        </a>
+        <div class="auth-hero-text">
+          <h1>Plan your<br /><em>perfect day</em></h1>
+          <p>Your all-in-one wedding companion. Manage guests, budget, itinerary, and more — synced securely to the cloud.</p>
+        </div>
+        <div class="auth-features">
+          <div class="auth-feat"><span class="af-icon">👥</span><span>Guest list manager with RSVP tracking</span></div>
+          <div class="auth-feat"><span class="af-icon">💰</span><span>Budget planner with live breakdown</span></div>
+          <div class="auth-feat"><span class="af-icon">📅</span><span>3-day editable event itinerary</span></div>
+          <div class="auth-feat"><span class="af-icon">☁️</span><span>Synced securely across all your devices</span></div>
+        </div>
+        <div class="auth-quote">
+          <p>"Every great love story deserves a flawless beginning."</p>
+        </div>
+      </div>
+      <img src="hero_bg.png" alt="Wedding setting" class="auth-bg-img" />
+      <div class="auth-bg-overlay"></div>
+    </div>
+
+    <!-- Right panel — Clerk sign-in/up component -->
+    <div class="auth-right">
+      <div class="auth-right-inner">
+
+        <!-- Tab switcher -->
+        <div class="auth-tabs">
+          <button class="auth-tab active" id="tabSignIn" onclick="showTab('signin')">Sign In</button>
+          <button class="auth-tab" id="tabSignUp" onclick="showTab('signup')">Create Account</button>
+        </div>
+
+        <!-- Clerk components mount here -->
+        <div id="clerk-sign-in"  class="clerk-mount"></div>
+        <div id="clerk-sign-up"  class="clerk-mount" style="display:none"></div>
+
+        <!-- Loading placeholder -->
+        <div class="auth-loading" id="authLoading">
+          <div class="auth-spinner"></div>
+          <p>Loading secure sign-in…</p>
+        </div>
+
+        <p class="auth-footer-note">
+          By signing in you agree to keep your data private and secure. 🔒
+        </p>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="clerk-auth.js"></script>
+  <script>
+    let activeTab = 'signin';
+
+    function showTab(tab) {
+      activeTab = tab;
+      document.getElementById('tabSignIn').classList.toggle('active', tab === 'signin');
+      document.getElementById('tabSignUp').classList.toggle('active', tab === 'signup');
+      document.getElementById('clerk-sign-in').style.display = tab === 'signin' ? 'block' : 'none';
+      document.getElementById('clerk-sign-up').style.display = tab === 'signup' ? 'block' : 'none';
+    }
+
+    NuptiaAuth.initClerk(async (clerk) => {
+      // Already signed in → go to main app
+      if (clerk.user) {
+        window.location.replace('index.html');
+        return;
+      }
+
+      document.getElementById('authLoading').style.display = 'none';
+
+      // Mount Sign In
+      clerk.mountSignIn(document.getElementById('clerk-sign-in'), {
+        routing: 'hash',
+        afterSignInUrl: 'index.html',
+        afterSignUpUrl: 'index.html',
+        appearance: {
+          variables: {
+            colorPrimary: '#B8872A',
+            colorBackground: '#FFFFFF',
+            colorText: '#1C0E06',
+            borderRadius: '12px',
+            fontFamily: 'Inter, sans-serif',
+          },
+        },
+      });
+
+      // Mount Sign Up
+      clerk.mountSignUp(document.getElementById('clerk-sign-up'), {
+        routing: 'hash',
+        afterSignInUrl: 'index.html',
+        afterSignUpUrl: 'index.html',
+        appearance: {
+          variables: {
+            colorPrimary: '#B8872A',
+            colorBackground: '#FFFFFF',
+            colorText: '#1C0E06',
+            borderRadius: '12px',
+            fontFamily: 'Inter, sans-serif',
+          },
+        },
+      });
+
+      // Listen for sign-in success
+      clerk.addListener(({ user }) => {
+        if (user) window.location.replace('index.html');
+      });
+    });
+  </script>
+</body>
+</html>

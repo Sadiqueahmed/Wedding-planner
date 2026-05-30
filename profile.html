@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Profile — Nuptia Wedding Planner</title>
+  <meta name="description" content="Manage your Nuptia profile, wedding details, and account settings." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="auth.css" />
+</head>
+<body class="profile-body">
+
+  <!-- NAV -->
+  <nav class="profile-nav">
+    <a href="index.html" class="pnav-logo">
+      <span>💍</span><span>Nuptia</span>
+    </a>
+    <div class="pnav-actions">
+      <button class="btn-back" onclick="history.back()">← Back to Planner</button>
+      <button class="btn-signout" onclick="NuptiaAuth.signOut()">Sign Out</button>
+    </div>
+  </nav>
+
+  <!-- HERO BANNER -->
+  <div class="profile-hero">
+    <img src="hero_bg.png" alt="Wedding background" class="profile-hero-img" />
+    <div class="profile-hero-overlay"></div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="profile-container">
+
+    <!-- ═══ PROFILE CARD ═══ -->
+    <div class="profile-card" id="profileCard">
+      <div class="profile-card-top">
+        <!-- Avatar -->
+        <div class="profile-avatar" id="profileAvatarWrap">
+          <span id="profileAvatarInitial">…</span>
+        </div>
+        <!-- Info -->
+        <div class="profile-info">
+          <div class="profile-name" id="profileName">Loading…</div>
+          <div class="profile-email" id="profileEmail"></div>
+          <div class="profile-badges">
+            <span class="profile-badge badge-gold">💍 Wedding Planner</span>
+            <span class="profile-badge badge-green" id="syncBadge">☁️ Synced</span>
+          </div>
+        </div>
+      </div>
+      <div class="profile-card-actions">
+        <button class="btn-prof-primary" onclick="openEditModal()">✏️ Edit Profile &amp; Photo</button>
+        <button class="btn-prof-outline" onclick="window.location='index.html'">🗂️ Go to Planner</button>
+        <button class="btn-prof-danger"  onclick="NuptiaAuth.signOut()">↪ Sign Out</button>
+      </div>
+    </div>
+
+    <!-- ═══ WEDDING STATS ═══ -->
+    <div class="profile-section">
+      <div class="ps-header">
+        <span class="ps-title">📊 Your Wedding at a Glance</span>
+      </div>
+      <div class="ps-body">
+        <div class="stats-row">
+          <div class="stat-box">
+            <span class="sb-num" id="pstatGuests">0</span>
+            <span class="sb-label">Total Guests</span>
+          </div>
+          <div class="stat-box green">
+            <span class="sb-num" id="pstatConfirmed">0</span>
+            <span class="sb-label">✅ Confirmed</span>
+          </div>
+          <div class="stat-box rose">
+            <span class="sb-num" id="pstatPending">0</span>
+            <span class="sb-label">🕐 Pending</span>
+          </div>
+          <div class="stat-box gold">
+            <span class="sb-num" id="pstatDays">—</span>
+            <span class="sb-label">Days to Go</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ WEDDING DETAILS ═══ -->
+    <div class="profile-section">
+      <div class="ps-header">
+        <span class="ps-title">💐 Wedding Details</span>
+        <button class="btn-ps-edit" onclick="saveWeddingDetails()">💾 Save</button>
+      </div>
+      <div class="ps-body">
+        <div class="wedding-fields">
+          <div class="wf-group">
+            <label class="wf-label">Bride's Name</label>
+            <input class="wf-value" type="text" id="wfBride" placeholder="e.g. Fatima" />
+          </div>
+          <div class="wf-group">
+            <label class="wf-label">Groom's Name</label>
+            <input class="wf-value" type="text" id="wfGroom" placeholder="e.g. Ahmed" />
+          </div>
+          <div class="wf-group">
+            <label class="wf-label">Wedding Date</label>
+            <input class="wf-value" type="date" id="wfDate" />
+          </div>
+          <div class="wf-group">
+            <label class="wf-label">Venue</label>
+            <input class="wf-value" type="text" id="wfVenue" placeholder="e.g. Royal Palace, Dubai" />
+          </div>
+          <div class="wf-group">
+            <label class="wf-label">City / Location</label>
+            <input class="wf-value" type="text" id="wfCity" placeholder="e.g. Mumbai" />
+          </div>
+          <div class="wf-group">
+            <label class="wf-label">Total Budget (₹ Lakhs)</label>
+            <input class="wf-value" type="number" id="wfBudget" placeholder="e.g. 40" min="1" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ ACCOUNT SETTINGS (Clerk UserProfile) ═══ -->
+    <div class="profile-section">
+      <div class="ps-header">
+        <span class="ps-title">⚙️ Account &amp; Security</span>
+      </div>
+      <div class="ps-body">
+        <div class="clerk-profile-wrap" id="clerkProfileEmbed"></div>
+      </div>
+    </div>
+
+  </div><!-- end .profile-container -->
+
+  <!-- ═══ EDIT PROFILE MODAL ═══ -->
+  <div class="prof-modal-backdrop" id="editModalBackdrop" onclick="closeEditModal()"></div>
+  <div class="prof-modal" id="editModal">
+    <div class="prof-modal-hd">
+      <h3>✏️ Edit Profile</h3>
+      <button class="prof-modal-x" onclick="closeEditModal()">✕</button>
+    </div>
+    <div class="prof-modal-bd">
+      <div id="clerkProfileModal"></div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="p-toast" id="profileToast"></div>
+
+  <script src="clerk-auth.js"></script>
+  <script src="firebase-config.js"></script>
+  <script>
+    /* ── Storage helpers (re-declared locally for profile page) ── */
+    function lsGet(k, d) { try { const v = localStorage.getItem(k); return v != null ? JSON.parse(v) : d; } catch { return d; } }
+    function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+
+    let prefix = '';
+
+    function ptoast(msg) {
+      const el = document.getElementById('profileToast');
+      el.textContent = msg; el.classList.add('show');
+      setTimeout(() => el.classList.remove('show'), 2400);
+    }
+
+    /* ── Load wedding stats from localStorage ── */
+    function loadStats() {
+      const guests    = lsGet(prefix + 'guests', []);
+      const total     = guests.length;
+      const confirmed = guests.filter(g => g.rsvp === 'confirmed').length;
+      const pending   = guests.filter(g => g.rsvp === 'pending').length;
+
+      document.getElementById('pstatGuests').textContent    = total;
+      document.getElementById('pstatConfirmed').textContent = confirmed;
+      document.getElementById('pstatPending').textContent   = pending;
+
+      const dateStr = lsGet(prefix + 'weddingDate', null) || lsGet('nuptia_anon_weddingDate', '2026-12-15');
+      const diff = Math.ceil((new Date(dateStr + 'T00:00:00') - new Date()) / 86400000);
+      document.getElementById('pstatDays').textContent = diff > 0 ? diff : '🎊';
+    }
+
+    /* ── Load wedding details ── */
+    function loadWeddingDetails() {
+      const d = lsGet(prefix + 'weddingDetails', {});
+      document.getElementById('wfBride').value  = d.bride  || '';
+      document.getElementById('wfGroom').value  = d.groom  || '';
+      document.getElementById('wfDate').value   = d.date   || lsGet(prefix + 'weddingDate', '2026-12-15');
+      document.getElementById('wfVenue').value  = d.venue  || '';
+      document.getElementById('wfCity').value   = d.city   || '';
+      document.getElementById('wfBudget').value = d.budget || lsGet(prefix + 'totalBudget', 40);
+    }
+
+    /* ── Save wedding details ── */
+    window.saveWeddingDetails = function () {
+      const d = {
+        bride:  document.getElementById('wfBride').value.trim(),
+        groom:  document.getElementById('wfGroom').value.trim(),
+        date:   document.getElementById('wfDate').value,
+        venue:  document.getElementById('wfVenue').value.trim(),
+        city:   document.getElementById('wfCity').value.trim(),
+        budget: document.getElementById('wfBudget').value,
+      };
+      lsSet(prefix + 'weddingDetails', d);
+      if (d.date)   lsSet(prefix + 'weddingDate', d.date);
+      if (d.budget) lsSet(prefix + 'totalBudget', parseFloat(d.budget));
+
+      /* Sync to Firebase if available */
+      if (window.FIREBASE_READY && window.db) {
+        const user = NuptiaAuth.currentUser();
+        if (user) {
+          db.collection('users').doc(user.id)
+            .set({ weddingDetails: d }, { merge: true })
+            .catch(console.warn);
+        }
+      }
+
+      ptoast('💾 Wedding details saved!');
+      loadStats();
+    };
+
+    /* ── Edit Profile Modal ── */
+    let profileMounted = false;
+
+    window.openEditModal = function () {
+      document.getElementById('editModal').classList.add('open');
+      document.getElementById('editModalBackdrop').classList.add('open');
+
+      if (!profileMounted) {
+        window.Clerk.mountUserProfile(document.getElementById('clerkProfileModal'), {
+          appearance: {
+            variables: {
+              colorPrimary:    '#B8872A',
+              colorBackground: '#FEFCF7',
+              colorText:       '#1C0E06',
+              borderRadius:    '12px',
+              fontFamily:      'Inter, sans-serif',
+            },
+          },
+        });
+        profileMounted = true;
+      }
+    };
+
+    window.closeEditModal = function () {
+      document.getElementById('editModal').classList.remove('open');
+      document.getElementById('editModalBackdrop').classList.remove('open');
+      /* Refresh avatar after edit */
+      populateProfile(window.Clerk.user);
+    };
+
+    /* ── Populate profile UI ── */
+    function populateProfile(user) {
+      if (!user) return;
+
+      /* Name */
+      const fullName = [user.firstName, user.lastName].filter(Boolean).join(' ')
+        || user.primaryEmailAddress?.emailAddress?.split('@')[0]
+        || 'My Account';
+      document.getElementById('profileName').textContent  = fullName;
+      document.getElementById('profileEmail').textContent = user.primaryEmailAddress?.emailAddress || '';
+
+      /* Avatar */
+      const wrap = document.getElementById('profileAvatarWrap');
+      const init = document.getElementById('profileAvatarInitial');
+      if (user.imageUrl) {
+        wrap.style.backgroundImage    = `url('${user.imageUrl}')`;
+        wrap.style.backgroundSize     = 'cover';
+        wrap.style.backgroundPosition = 'center';
+        if (init) init.style.display  = 'none';
+      } else {
+        wrap.style.background = '';
+        const letter = (user.firstName?.[0] || fullName[0] || 'U').toUpperCase();
+        if (init) { init.textContent = letter; init.style.display = ''; }
+      }
+    }
+
+    /* ═══════════════════════════════════════
+       INIT
+    ═══════════════════════════════════════ */
+    NuptiaAuth.initClerk(async (clerk) => {
+      if (!clerk.user) {
+        window.location.replace('sign-in.html');
+        return;
+      }
+
+      prefix = NuptiaAuth.getUserPrefix();
+
+      /* Populate header */
+      populateProfile(clerk.user);
+
+      /* Load data */
+      loadStats();
+      loadWeddingDetails();
+
+      /* Mount Clerk UserProfile embedded (in account section) */
+      clerk.mountUserProfile(document.getElementById('clerkProfileEmbed'), {
+        appearance: {
+          variables: {
+            colorPrimary:    '#B8872A',
+            colorBackground: '#FEFCF7',
+            colorText:       '#1C0E06',
+            borderRadius:    '12px',
+            fontFamily:      'Inter, sans-serif',
+          },
+        },
+      });
+
+      /* Re-populate if user updates profile */
+      clerk.addListener(({ user }) => {
+        if (user) populateProfile(user);
+        else window.location.replace('sign-in.html');
+      });
+
+      document.addEventListener('keydown', e => { if (e.key === 'Escape') closeEditModal(); });
+    });
+  </script>
+</body>
+</html>

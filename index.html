@@ -19,6 +19,9 @@
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
+  <!-- Clerk Auth -->
+  <script src="clerk-auth.js"></script>
+
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -50,6 +53,14 @@
         <span class="cloud-dot" id="cloudDot"></span>
         <span class="cloud-label" id="cloudLabel">Connecting…</span>
       </div>
+      <!-- User avatar + profile dropdown -->
+      <div class="nav-user" id="navUser" style="display:none">
+        <a href="profile.html" class="nav-user-btn" title="My Profile">
+          <div class="nav-user-avatar">?</div>
+          <span class="nav-user-name hide-xs">Profile</span>
+        </a>
+        <button class="nav-signout-btn" onclick="NuptiaAuth.signOut()" title="Sign out">↪</button>
+      </div>
       <button class="hamburger" id="hamburger" aria-label="Menu" onclick="toggleMenu()">
         <span></span><span></span><span></span>
       </button>
@@ -63,6 +74,17 @@
       <span class="logo-text">💍 Nuptia</span>
       <button onclick="closeMenu()" class="drawer-close">✕</button>
     </div>
+    <!-- Drawer user block -->
+    <div class="drawer-user" id="drawerUser" style="display:none">
+      <div class="drawer-user-inner">
+        <div class="nav-user-avatar drawer-avatar">?</div>
+        <div>
+          <div class="nav-user-name" style="font-weight:600;font-size:0.9rem">…</div>
+          <div class="nav-user-email" style="font-size:0.75rem;color:var(--text-l)"></div>
+        </div>
+      </div>
+      <a href="profile.html" onclick="closeMenu()" class="drawer-profile-link">👤 My Profile →</a>
+    </div>
     <nav class="drawer-links">
       <a href="#budget"    onclick="closeMenu()">💰 Budget</a>
       <a href="#guests"    onclick="closeMenu()">👥 Guest List</a>
@@ -70,6 +92,7 @@
       <a href="#vendors"   onclick="closeMenu()">📋 Vendors</a>
       <a href="#delegation"onclick="closeMenu()">🤝 Team</a>
       <a href="#countdown" onclick="closeMenu()">⏳ Countdown</a>
+      <a href="javascript:void(0)" onclick="NuptiaAuth.signOut()" style="color:#C04038">↪ Sign Out</a>
     </nav>
     <div class="drawer-cloud-status">
       <span class="cloud-dot" id="drawerCloudDot"></span>
@@ -571,5 +594,27 @@
   <!-- Firebase Config — edit firebase-config.js with your credentials -->
   <script src="firebase-config.js"></script>
   <script src="app.js"></script>
+
+  <!-- Auth guard + populate user nav -->
+  <script>
+    NuptiaAuth.initClerk(async (clerk) => {
+      if (!clerk.user) {
+        window.location.replace('sign-in.html');
+        return;
+      }
+      /* Show user nav elements */
+      const navUser    = document.getElementById('navUser');
+      const drawerUser = document.getElementById('drawerUser');
+      if (navUser)    navUser.style.display    = 'flex';
+      if (drawerUser) drawerUser.style.display = 'block';
+      NuptiaAuth.populateNavUser();
+
+      /* Re-populate if user data changes (e.g. after profile update) */
+      clerk.addListener(({ user }) => {
+        if (!user) { window.location.replace('sign-in.html'); return; }
+        NuptiaAuth.populateNavUser();
+      });
+    });
+  </script>
 </body>
 </html>
